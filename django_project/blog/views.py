@@ -67,18 +67,14 @@ def about(request):
     return render(request, 'blog/about.html')
 
 
-def add_comment(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    if request.method == "POST":
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.post = post
-            comment.save()
-            return HttpResponse(reverse('post-detail', kwargs={'pk': comment.post.pk}))
-    else:
-        form = CommentForm()
-    return render(request, 'blog/comment_form.html', {'form': form})
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    fields = ['author', 'text']
+
+    def form_valid(self, form):
+        post = get_object_or_404(Post, pk=self.kwargs.get('pk'))
+        form.instance.post = post
+        return super().form_valid(form)
 
 
 @login_required
